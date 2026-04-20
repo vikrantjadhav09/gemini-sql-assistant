@@ -2,7 +2,5 @@
 venv
 
 echo "__pycache__/" >> .gitignore
-echo "*.pyc" >> .gitignore
 echo "venv/" >> .gitignore
-echo "*.db" >> .gitignore
 
