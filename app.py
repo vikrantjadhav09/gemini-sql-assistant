@@ -151,32 +151,6 @@ if st.session_state.show_welcome:
 # ---------- Sidebar ----------
 
 with st.sidebar:
-    st.header("📂 Database Schema")
-    st.caption("Use these column names to form your questions")
-
-    schema = get_schema_info(DB_PATH)  # ✅ Using DB_PATH
-
-    if schema:
-        for key, value in schema.items():
-            if "_preview" in key:
-                continue
-
-            table_name = key
-            columns = value
-            preview_rows = schema.get(table_name + "_preview", [])
-
-            with st.expander(f"🗄️ Table: `{table_name}`", expanded=True):
-                st.markdown("**Columns:**")
-                for col in columns:
-                    st.markdown(f"- `{col['name']}` — *{col['type']}*")
-                st.divider()
-                if preview_rows:
-                    st.markdown("**Preview (first 3 rows):**")
-                    col_names = [col["name"] for col in columns]
-                    preview_df = pd.DataFrame(preview_rows, columns=col_names)
-                    st.dataframe(preview_df, use_container_width=True)
-
-    st.divider()
 
     st.markdown("**💡 Example Questions:**")
     examples = [
