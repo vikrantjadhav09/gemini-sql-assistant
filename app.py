@@ -7,6 +7,9 @@ import sqlite3
 import pandas as pd
 import google.generativeai as genai
 
+# ✅ Fix for cloud deployment - works locally & on Streamlit Cloud
+DB_PATH = os.path.join(os.path.dirname(__file__), "Naresh_it_employee.db")
+
 # Configure Gemini
 api_key = os.getenv("GOOGLE_API_KEY")
 if not api_key:
@@ -86,7 +89,7 @@ st.set_page_config(page_title="SQL Query Assistant", page_icon="🧠", layout="w
 st.title("🧠 Gemini SQL Query Assistant")
 st.caption("Ask questions in plain English — get answers from the database.")
 
-# ✅ NEW: Welcome Modal on first load using session_state
+# ✅ Welcome Modal on first load
 if "show_welcome" not in st.session_state:
     st.session_state.show_welcome = True
 
@@ -94,7 +97,7 @@ if "show_welcome" not in st.session_state:
 def show_welcome_modal():
     st.markdown("""
     ### 🤔 What does this app do?
-    This app lets you **ask questions in plain English** and get answers 
+    This app lets you **ask questions in plain English** and get answers
     directly from the employee database — no SQL knowledge needed!
 
     ---
@@ -142,12 +145,38 @@ def show_welcome_modal():
             st.session_state.show_welcome = False
             st.rerun()
 
-# Show modal only on first load
 if st.session_state.show_welcome:
     show_welcome_modal()
 
-# ✅ Help button to reopen modal anytime
+# ---------- Sidebar ----------
+
 with st.sidebar:
+    st.header("📂 Database Schema")
+    st.caption("Use these column names to form your questions")
+
+    schema = get_schema_info(DB_PATH)  # ✅ Using DB_PATH
+
+    if schema:
+        for key, value in schema.items():
+            if "_preview" in key:
+                continue
+
+            table_name = key
+            columns = value
+            preview_rows = schema.get(table_name + "_preview", [])
+
+            with st.expander(f"🗄️ Table: `{table_name}`", expanded=True):
+                st.markdown("**Columns:**")
+                for col in columns:
+                    st.markdown(f"- `{col['name']}` — *{col['type']}*")
+                st.divider()
+                if preview_rows:
+                    st.markdown("**Preview (first 3 rows):**")
+                    col_names = [col["name"] for col in columns]
+                    preview_df = pd.DataFrame(preview_rows, columns=col_names)
+                    st.dataframe(preview_df, use_container_width=True)
+
+    st.divider()
 
     st.markdown("**💡 Example Questions:**")
     examples = [
@@ -162,7 +191,6 @@ with st.sidebar:
 
     st.divider()
 
-    # ✅ Reopen welcome guide anytime
     if st.button("📖 Show Guide Again", use_container_width=True):
         st.session_state.show_welcome = True
         st.rerun()
@@ -186,7 +214,7 @@ if st.button("🔍 Ask", use_container_width=True):
                 st.error("⚠️ Unsafe query detected. Only SELECT queries are allowed.")
             else:
                 with st.spinner("Fetching results..."):
-                    df = read_sql_query(sql, "Naresh_it_employee.db")
+                    df = read_sql_query(sql, DB_PATH)  # ✅ Using DB_PATH
 
                 if df is not None:
                     if df.empty:
