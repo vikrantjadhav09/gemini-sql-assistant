@@ -2,3 +2,4 @@ streamlit
 google-generativeai
 python-dotenv
 sqlite3
+pandas
